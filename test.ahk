@@ -11,19 +11,43 @@ class StringPhraseTestSuite {
 	Plaintext() {
 		template := "hello world"
 		expectation := "hello world"
-		YUnit.assert(expectation == Phrase.from(template).format())
+		assertStringEquals(expectation, Phrase.from(template).format())
 	}
 
 	OneKey() {
 		template := "hello {name}"
 		expectation := "hello someone"
-		YUnit.assert(expectation == Phrase.from(template).put("name", "someone").format())
+		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
 	}
 
 	MissingKey() {
-        this.ExpectedException := Exception("Key ""name"" not set!")
+		this.ExpectedException := Exception("Key ""name"" not set!")
 		template := "hello {name}"
 		Phrase.from(template).format()
 	}
 
+	EscapingBegin() {
+		template := "hello {{mr. {name}"
+		expectation := "hello {mr. someone"
+		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
+	}
+
+	EscapingEnd() {
+        template := "hello mr.}} {name}"
+		expectation := "hello mr.} someone"
+		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
+	}
+
+	EscapingBeginEnd() {
+		template := "hello {{mr.}} {name}"
+		expectation := "hello {mr.} someone"
+		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
+	}
+
+}
+
+assertStringEquals(expected, actual) {
+	if (expected != actual) {
+		throw Exception("Expected: " . expected . ", Got: " . actual)
+	}
 }
