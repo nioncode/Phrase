@@ -13,14 +13,14 @@ class Phrase {
 	__New(template) {
 		this.template := template
 		if (template == "") {
-			throw Exception("Empty Template!")
+			throw Exception("EmptyTemplate")
 		}
 		this.parse()
 	}
 
 	put(key, value) {
 		if (!this.keys.hasKey(key)) {
-			throw Exception("Key """ . key . """ not found in template: " this.template)
+			throw Exception("KeyNotFound", -1, "Key """ . key . """ not found in template: " . this.template)
 		}
 		this.keys[key].value := value
 		return this
@@ -31,7 +31,7 @@ class Phrase {
 		for index, part in this.parts {
 			if (part.isKey()) {
 				if (part.value = "") {
-					throw Exception("Key """ . part.keyId . """ not set!")
+					throw Exception("KeyNotSet", -1, "Key """ . part.keyId . """ not set")
 				}
 				string .= part.value
 			} else {
@@ -95,7 +95,7 @@ class Phrase {
 					isParsingKey := false
 					length := A_Index - partStart - 1
 					if (length == 0) {
-						throw Exception("Empty Key!")
+						throw Exception("EmptyKey", -1, "Empty key at position " . A_Index-1)
 					}
 
 					; Check if there is already a key with keyId.
@@ -117,7 +117,7 @@ class Phrase {
 				charCode := asc(char)
 				if ((charCode < CODE_LOWER_A || charCode > CODE_LOWER_Z) && (charCode != CODE_UNDERSCORE)) {
 					keyId := SubStr(template, partStart, A_Index - partStart - 1)
-					throw Exception("illegal character """ . char . """ in key """ . keyId . """ at position " . A_Index-1)
+					throw Exception("IllegalKeyCharacter", -1, "Illegal character """ . char . """ in key """ . keyId . """ at position " . A_Index-1)
 				}
 				continue
 			}
@@ -150,7 +150,7 @@ class Phrase {
 					; skipping over the detection of KEY_END.
 					lookAhead := ""
 				} else {
-					throw Exception("Not escaped closing brace!")
+					throw Exception("UnescapedKeyEnd" ,-1, "Unescaped """ . Phrase.KEY_END . """ at position " . A_Index-1)
 				}
 				continue
 			}
@@ -159,7 +159,7 @@ class Phrase {
 		if (isParsingKey) {
 			; Key is not complete.
 			keyId := SubStr(template, partStart)
-			throw Exception("no matching closing brace found for key """ . keyId . """ starting at position " . partStart)
+			throw Exception("UnescapedKeyBegin" ,-1, "Unescaped """ . Phrase.KEY_BEGIN . """ at position " . A_Index-1)
 		} else {
 			; Copy the remaining text.
 			parts.insert(new Phrase.Text(partStart, ""))
