@@ -1,6 +1,7 @@
-
 class Phrase {
 
+	static KEY_BEGIN := "{"
+	static KEY_END := "}"
 	parts := Object()
 	keys := Object()
 	template := ""
@@ -11,9 +12,10 @@ class Phrase {
 
 	__New(template) {
 		this.template := template
-		parsingResult := new Phrase.Parser(this.template).parse()
-		this.parts := parsingResult.parts
-		this.keys := parsingResult.keys
+		if (template == "") {
+			throw Exception("Empty Template!")
+		}
+		this.parse()
 	}
 
 	put(key, value) {
@@ -27,25 +29,35 @@ class Phrase {
 	format() {
 		string := ""
 		for index, part in this.parts {
-			if (part.value = "" && part.isKey()) {
-				throw Exception("Key """ . part.keyId . """ not set!")
+			if (part.isKey()) {
+				if (part.value = "") {
+					throw Exception("Key """ . part.keyId . """ not set!")
+				}
+				string .= part.value
+			} else {
+				if (part.length) {
+					string .= SubStr(this.template, part.offset, part.length)
+				} else {
+					string .= SubStr(this.template, part.offset)
+				}
 			}
-			string .= part.value
 		}
 		return string
 	}
 
 	class Part {
-		value := ""
-
 		isKey() {
 			return false
 		}
 	}
 
 	class Text extends Phrase.Part {
-		__New(text) {
-			this.value := text
+		offset := 0
+		length := 0
+		
+		__New(offset, length) {
+			this.offset := offset
+			this.length := length
 		}
 	}
 
@@ -61,156 +73,100 @@ class Phrase {
 		}
 	}
 
-	class Parser {
-		static KEY_BEGIN := "{"
-		static KEY_END := "}"
-		template := ""
-		templateLength := 0
-		currentIndex := -1
+	parse() {
+		static CODE_LOWER_A := asc("a"), CODE_LOWER_Z := asc("z"), CODE_UNDERSCORE = asc("_")
+		parts := Object()
+		keys := Object()
 
-		__New(template) {
-			this.template := template
-			this.templateLength := StrLen(template)
-		}
+		; Add an additional space character to the end of the template to have the parsing loop
+		; run one more time at the end in order to find the last KEY_END character.
+		template := this.template . " "
 
-		parse() {
-			parts := Object()
-			keys := Object()
-			this.currentIndex := 1
-			while (!this.atEnd()) {
-				char := this.currentChar()
-				if (char == Phrase.Parser.KEY_BEGIN && this.lookAhead() != Phrase.Parser.KEY_BEGIN) {
-					keyId := this.consumeKey()
-					if (keys.hasKey(keyId)) {
-						; If we already have found the same key before, do not
-						; create it again, just add it to the parts once more.
-						parts.insert(keys[keyId])
-						continue
+		lookAhead := ""
+		isParsingKey := false
+		partStart := 1
+		Loop, Parse, template
+		{
+			char := lookAhead
+			lookAhead := A_LoopField
+			if (isParsingKey) {
+				if (char == Phrase.KEY_END) {
+					; We have found the end of a key.
+					isParsingKey := false
+					length := A_Index - partStart - 1
+					if (length == 0) {
+						throw Exception("Empty Key!")
 					}
-					key := new Phrase.Key(keyId)
-					parts.insert(key)
-					keys[key.keyId] := key
+
+					; Check if there is already a key with keyId.
+					; If it is, just insert it again in the parts list.
+					; Otherwise, create a new key and add it to the parts and keys.
+					keyId := SubStr(template, partStart, length)
+					if (keys.hasKey(keyId)) {
+						parts.insert(keys[keyId])
+					} else {
+						key := new Phrase.Key(keyId)
+						parts.insert(key)
+						keys[key.keyId] := key
+					}
+					partStart := A_Index
 					continue
 				}
-				parts.insert(new Phrase.Text(this.consumeText()))
-			}
-			return {"parts": parts, "keys": keys}
-		}
 
-		/**
-		 * @brief Consumes a single character.
-		*/
-		consume() {
-			this.currentIndex++
-		}
-
-		/**
-		 * @brief Consumes a key.
-		 * @return the identifier of the key, i.e. everything between the key delimiters.
-		*/
-		consumeKey() {
-			keyId := ""
-			startingPosition := this.currentIndex
-
-			; Consume the KEY_BEGIN char.
-			this.consume()
-			while (true) {
-				if (this.atEnd()) {
-					throw Exception("no matching closing brace found for key """ . keyId . """ starting at position " . startingPosition)
+				; Check that the current character is allowed inside a key.
+				charCode := asc(char)
+				if ((charCode < CODE_LOWER_A || charCode > CODE_LOWER_Z) && (charCode != CODE_UNDERSCORE)) {
+					keyId := SubStr(template, partStart, A_Index - partStart - 1)
+					throw Exception("illegal character """ . char . """ in key """ . keyId . """ at position " . A_Index-1)
 				}
-				char := this.currentChar()
-				if (char == Phrase.Parser.KEY_END) {
-					this.consume()
-					break
-				}
-				if (!this.isAllowedKeyCharacter()) {
-					throw Exception("illegal character """ . char . """ in key """ . keyId . """ at position " . this.currentIndex)
-				}
-				keyId .= char
-				this.consume()
+				continue
 			}
-			if (StrLen(keyId) = 0) {
-				throw Exception("key at position " . startingPosition . " is empty")
-			}
-			return keyId
-		}
 
-		/**
-		 * @brief Returns whether the current character is allowed inside a key identifier.
-		*/
-		isAllowedKeyCharacter() {
-			static CODE_LOWER_A := asc("a"), CODE_LOWER_Z := asc("z"), CODE_UNDERSCORE = asc("_")
-			charCode := asc(this.currentChar())
-			return (charCode >= CODE_LOWER_A && charCode <= CODE_LOWER_Z) || (charCode == CODE_UNDERSCORE)
-		}
-
-		/**
-		 * @brief Consumes everything until a new key identifier is found.
-		 * @return the text that was consumed.
-		*/
-		consumeText() {
-			text := ""
-			while (!this.atEnd()) {
-				char := this.currentChar()
-				if (char == Phrase.Parser.KEY_BEGIN) {
-					if (this.lookAhead() == Phrase.Parser.KEY_BEGIN) {
-						; The KEY_BEGIN character was escaped.
-						; Add it to the text only once, but consume two
-						; characters, the KEY_BEGIN and its escaping char.
-						text .= char
-						this.consume()
-						this.consume()
-						continue
-					} else {
-						; We reached the beginning of a new key.
-						break
+			if (char == Phrase.KEY_BEGIN) {
+				if (lookAhead == Phrase.KEY_BEGIN) {
+					; Found an escaped KEY_BEGIN. Add a new text part that includes the first KEY_BEGIN.
+					parts.insert(new Phrase.Text(partStart, A_Index - partStart - 1))
+					partStart := A_Index
+					; Reset 'lookAhead' to have the next iteration have an empty 'char', effectively
+					; skipping over the detection of KEY_BEGIN.
+					lookAhead := ""
+				} else {
+					; Found the beginning of a new key.
+					if (A_Index - partStart - 1 > 0) {
+						; Insert a new text part if its length is greater than 0.
+						parts.insert(new Phrase.Text(partStart, A_Index - partStart - 1))
 					}
+					isParsingKey := true
+					partStart := A_Index
 				}
-				if (char == Phrase.Parser.KEY_END) {
-					if (this.lookAhead() == Phrase.Parser.KEY_END) {
-						; The KEY_END character was escaped.
-						; Add it to the text only once, but consume two
-						; characters, the KEY_END and its escaping char.
-						text .= char
-						this.consume()
-						this.consume()
-						continue
-					} else {
-						throw Exception("no matching opening brace found for closing brace at position " . this.currentIndex)
-						break
-					}
+				continue
+			}
+			if (char == Phrase.KEY_END) {
+				if (lookAhead == Phrase.KEY_END) {
+					; Found an escaped KEY_END. Add a new text part that includes the first KEY_END.
+					parts.insert(new Phrase.Text(partStart, A_Index - partStart - 1))
+					partStart := A_Index
+					; Reset 'lookAhead' to have the next iteration have an empty 'char', effectively
+					; skipping over the detection of KEY_END.
+					lookAhead := ""
+				} else {
+					throw Exception("Not escaped closing brace!")
 				}
-				; Add every non special character to the text and consume it.
-				text .= char
-				this.consume()
+				continue
 			}
-			if (StrLen(text) = 0) {
-				throw Exception("text at position " . this.currentIndex . " is empty")
-			}
-			return text
 		}
 
-		/**
-		 * @brief Returns the character at the current position.
-		*/
-		currentChar() {
-			return SubStr(this.template, this.currentIndex, 1)
+		if (isParsingKey) {
+			; Key is not complete.
+			keyId := SubStr(template, partStart)
+			throw Exception("no matching closing brace found for key """ . keyId . """ starting at position " . partStart)
+		} else {
+			; Copy the remaining text.
+			parts.insert(new Phrase.Text(partStart, ""))
 		}
 
-		/**
-		 * @brief Returns the next character.
-		*/
-		lookAhead() {
-			return SubStr(this.template, this.currentIndex+1, 1)
-		}
-
-		/**
-		 * @brief Returns whether we are at the end of the template, i.e. all characters have been consumed.
-		*/
-		atEnd() {
-			return this.currentIndex > this.templateLength
-		}
-
+		this.parts := parts
+		this.keys := keys
 	}
 
 }
