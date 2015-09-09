@@ -1,7 +1,7 @@
 ﻿#Include <Yunit\Yunit>
 #Include <Yunit\Window>
 #Include <Yunit\StdOut>
-#Include <phrase>
+#Include <Phrase>
 #NoEnv
 
 Yunit.Use(YunitStdOut, YunitWindow).Test(StringPhraseTestSuite, StringTestSuite)
