@@ -105,6 +105,12 @@ class StringPhraseTestSuite {
 		Phrase.from(template).put(keyId, "foo").format()
 	}
 
+	KeysInsideBraces() {
+		template := "Something or {{{name}} is inside {{}"
+		expectation := "Something or {someone} is inside {}"
+		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
+	}
+
 }
 
 assertStringEquals(expected, actual) {
