@@ -74,21 +74,27 @@ class StringPhraseTestSuite {
 		Phrase.from(template).format()
 	}
 
-	EscapingBegin() {
+	EscapingAtBeginning() {
+		template := "{{hello mr. {name}"
+		expectation := "{hello mr. someone"
+		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
+	}
+
+	EscapingAtEnd() {
+		template := "hello mr. {name}{{"
+		expectation := "hello mr. someone{"
+		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
+	}
+
+	EscapingInMiddle() {
 		template := "hello {{mr. {name}"
 		expectation := "hello {mr. someone"
 		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
 	}
 
-	EscapingEnd() {
-        template := "hello mr.}} {name}"
+	EscapingNotNecessaryForKeyEndChar() {
+		template := "hello mr.} {name}"
 		expectation := "hello mr.} someone"
-		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
-	}
-
-	EscapingBeginEnd() {
-		template := "hello {{mr.}} {name}"
-		expectation := "hello {mr.} someone"
 		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
 	}
 

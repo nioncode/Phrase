@@ -125,7 +125,10 @@ class Phrase {
 			if (char == Phrase.KEY_BEGIN) {
 				if (lookAhead == Phrase.KEY_BEGIN) {
 					; Found an escaped KEY_BEGIN. Add a new text part that includes the first KEY_BEGIN.
-					parts.insert(new Phrase.Text(partStart, A_Index - partStart - 1))
+					if (A_Index - partStart - 1 > 0) {
+						; Insert a new text part if its length is greater than 0.
+						parts.insert(new Phrase.Text(partStart, A_Index - partStart - 1))
+					}
 					partStart := A_Index
 					; Reset 'lookAhead' to have the next iteration have an empty 'char', effectively
 					; skipping over the detection of KEY_BEGIN.
@@ -138,19 +141,6 @@ class Phrase {
 					}
 					isParsingKey := true
 					partStart := A_Index
-				}
-				continue
-			}
-			if (char == Phrase.KEY_END) {
-				if (lookAhead == Phrase.KEY_END) {
-					; Found an escaped KEY_END. Add a new text part that includes the first KEY_END.
-					parts.insert(new Phrase.Text(partStart, A_Index - partStart - 1))
-					partStart := A_Index
-					; Reset 'lookAhead' to have the next iteration have an empty 'char', effectively
-					; skipping over the detection of KEY_END.
-					lookAhead := ""
-				} else {
-					throw Exception("UnescapedKeyEnd" ,-1, "Unescaped """ . Phrase.KEY_END . """ at position " . A_Index-1)
 				}
 				continue
 			}
