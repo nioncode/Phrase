@@ -1,3 +1,5 @@
+; Licensed under The MIT License (MIT), see: http://opensource.org/licenses/MIT
+; Copyright (c) 2015 Nicolas Schneider
 class Phrase {
 
 	static KEY_BEGIN := "{"
