@@ -124,6 +124,12 @@ class StringPhraseTestSuite {
 		assertStringEquals(expectation, Phrase.from(template, ["[", "]"]).put("name", "someone").format())
 	}
 
+	DelimitersInvalidIfEqual() {
+		this.ExpectedException := Exception("IllegalDelimiter")
+		template := "hello [name]"
+		Phrase.from(template, ["'", "'"]).put(keyId, "foo").format()
+	}
+
 }
 
 assertStringEquals(expected, actual) {

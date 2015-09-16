@@ -33,6 +33,9 @@ class Phrase {
 			if (StrLen(delimiters[2]) != 1) {
 				throw Exception("IllegalDelimiter", -1, "Second delimiter must be a single character!")
 			}
+			if (delimiters[1] == delimiters[2]) {
+				throw Exception("IllegalDelimiter", -1, "Key begin and key end must not be the same character!")
+			}
 			this.keyBegin := delimiters[1]
 			this.keyEnd := delimiters[2]
 		}
