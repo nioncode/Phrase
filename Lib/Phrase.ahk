@@ -3,20 +3,38 @@
 ; Version: 1.0, Date: 09.09.2015
 class Phrase {
 
-	static KEY_BEGIN := "{"
-	static KEY_END := "}"
+	static DEFAULT_KEY_BEGIN := "{"
+	static DEFAULT_KEY_END := "}"
 	parts := Object()
 	keys := Object()
 	template := ""
+	keyBegin := Phrase.DEFAULT_KEY_BEGIN
+	keyEnd := Phrase.DEFAULT_KEY_END
 
-	from(template) {
-		return new Phrase(template)
+	; When you want to use custom delimiters, provide an array with two entries.
+	; Each must be a single character, the first one is the key begin character,
+	; the second one the key end character.
+	from(template, delimiters = "") {
+		return new Phrase(template, delimiters)
 	}
 
-	__New(template) {
+	__New(template, delimiters = "") {
 		this.template := template
 		if (template == "") {
 			throw Exception("EmptyTemplate")
+		}
+		if (isObject(delimiters)) {
+			if (delimiters.MaxIndex() != 2) {
+				throw Exception("IllegalDelimiter", -1, "Delimiters must be an array of length 2!")
+			}
+			if (StrLen(delimiters[1]) != 1) {
+				throw Exception("IllegalDelimiter", -1, "First delimiter must be a single character!")
+			}
+			if (StrLen(delimiters[2]) != 1) {
+				throw Exception("IllegalDelimiter", -1, "Second delimiter must be a single character!")
+			}
+			this.keyBegin := delimiters[1]
+			this.keyEnd := delimiters[2]
 		}
 		this.parse()
 	}
@@ -87,9 +105,11 @@ class Phrase {
 		static CODE_LOWER_A := asc("a"), CODE_LOWER_Z := asc("z"), CODE_UNDERSCORE = asc("_")
 		parts := Object()
 		keys := Object()
+		keyBegin := this.keyBegin
+		keyEnd := this.keyEnd
 
 		; Add an additional space character to the end of the template to have the parsing loop
-		; run one more time at the end in order to find the last KEY_END character.
+		; run one more time at the end in order to find the last keyEnd character.
 		template := this.template . " "
 
 		lookAhead := ""
@@ -100,7 +120,7 @@ class Phrase {
 			char := lookAhead
 			lookAhead := A_LoopField
 			if (isParsingKey) {
-				if (char == Phrase.KEY_END) {
+				if (char == keyEnd) {
 					; We have found the end of a key.
 					isParsingKey := false
 					length := A_Index - partStart - 1
@@ -132,16 +152,16 @@ class Phrase {
 				continue
 			}
 
-			if (char == Phrase.KEY_BEGIN) {
-				if (lookAhead == Phrase.KEY_BEGIN) {
-					; Found an escaped KEY_BEGIN. Add a new text part that includes the first KEY_BEGIN.
+			if (char == keyBegin) {
+				if (lookAhead == keyBegin) {
+					; Found an escaped keyBegin. Add a new text part that includes the first keyBegin.
 					if (A_Index - partStart - 1 > 0) {
 						; Insert a new text part if its length is greater than 0.
 						parts.insert(new Phrase.Text(partStart, A_Index - partStart - 1))
 					}
 					partStart := A_Index
 					; Reset 'lookAhead' to have the next iteration have an empty 'char', effectively
-					; skipping over the detection of KEY_BEGIN.
+					; skipping over the detection of keyBegin.
 					lookAhead := ""
 				} else {
 					; Found the beginning of a new key.
@@ -159,7 +179,7 @@ class Phrase {
 		if (isParsingKey) {
 			; Key is not complete.
 			keyId := SubStr(template, partStart)
-			throw Exception("UnescapedKeyBegin" ,-1, "Unescaped """ . Phrase.KEY_BEGIN . """ at position " . A_Index-1)
+			throw Exception("UnescapedKeyBegin" ,-1, "Unescaped """ . keyBegin . """ at position " . A_Index-1)
 		} else {
 			; Copy the remaining text.
 			parts.insert(new Phrase.Text(partStart, ""))
