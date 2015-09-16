@@ -130,6 +130,18 @@ class StringPhraseTestSuite {
 		Phrase.from(template, ["'", "'"]).put(keyId, "foo").format()
 	}
 
+	DelimitersInvalidIfTooLong() {
+		this.ExpectedException := Exception("IllegalDelimiter")
+		template := "hello [name]"
+		Phrase.from(template, ["ab", "c"]).put(keyId, "foo").format()
+	}
+
+	DelimitersInvalidIfTooMany() {
+		this.ExpectedException := Exception("IllegalDelimiter")
+		template := "hello [name]"
+		Phrase.from(template, ["{", "}", "}"]).put(keyId, "foo").format()
+	}
+
 }
 
 assertStringEquals(expected, actual) {
