@@ -111,6 +111,13 @@ class StringPhraseTestSuite {
 		assertStringEquals(expectation, Phrase.from(template).put("name", "someone").format())
 	}
 
+	PutMultipleKeys() {
+		template := "hello {first} {second}"
+		expectation := "hello some one"
+		keyMap := {first: "some", second: "one"}
+		assertStringEquals(expectation, Phrase.from(template).putAll(keyMap).format())
+	}
+
 }
 
 assertStringEquals(expected, actual) {

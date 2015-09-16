@@ -29,6 +29,13 @@ class Phrase {
 		return this
 	}
 
+	putAll(map) {
+		for key, value in map {
+			this.put(key, value)
+		}
+		return this
+	}
+
 	format() {
 		string := ""
 		for index, part in this.parts {
