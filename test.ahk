@@ -118,10 +118,16 @@ class StringPhraseTestSuite {
 		assertStringEquals(expectation, Phrase.from(template).putAll(keyMap).format())
 	}
 
-	CustomDelimiters() {
+	CustomDelimitersArray() {
 		template := "hello [name]"
 		expectation := "hello someone"
 		assertStringEquals(expectation, Phrase.from(template, ["[", "]"]).put("name", "someone").format())
+	}
+
+	CustomDelimitersString() {
+		template := "hello [name]"
+		expectation := "hello someone"
+		assertStringEquals(expectation, Phrase.from(template, "[]").put("name", "someone").format())
 	}
 
 	DelimitersInvalidIfEqual() {

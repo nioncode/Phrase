@@ -23,6 +23,13 @@ class Phrase {
 		if (template == "") {
 			throw Exception("EmptyTemplate")
 		}
+		if (delimiters != "" && !isObject(delimiters)) {
+			if (StrLen(delimiters) != 2) {
+				throw Exception("IllegalDelimiter", -1, "Delimiters must be a string of length 2!")
+			}
+			StringSplit, delims, delimiters
+			delimiters := [delims1, delims2]
+		}
 		if (isObject(delimiters)) {
 			if (delimiters.MaxIndex() != 2) {
 				throw Exception("IllegalDelimiter", -1, "Delimiters must be an array of length 2!")
