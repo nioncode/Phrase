@@ -131,19 +131,19 @@ class StringPhraseTestSuite {
 	}
 
 	DelimitersInvalidIfEqual() {
-		this.ExpectedException := Exception("IllegalDelimiter")
+		this.ExpectedException := Exception("IllegalKeyDelimiters")
 		template := "hello [name]"
 		Phrase.from(template, ["'", "'"]).put(keyId, "foo").format()
 	}
 
 	DelimitersInvalidIfTooLong() {
-		this.ExpectedException := Exception("IllegalDelimiter")
+		this.ExpectedException := Exception("IllegalKeyDelimiters")
 		template := "hello [name]"
 		Phrase.from(template, ["ab", "c"]).put(keyId, "foo").format()
 	}
 
 	DelimitersInvalidIfTooMany() {
-		this.ExpectedException := Exception("IllegalDelimiter")
+		this.ExpectedException := Exception("IllegalKeyDelimiters")
 		template := "hello [name]"
 		Phrase.from(template, ["{", "}", "}"]).put(keyId, "foo").format()
 	}

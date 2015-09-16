@@ -25,23 +25,23 @@ class Phrase {
 		}
 		if (delimiters != "" && !isObject(delimiters)) {
 			if (StrLen(delimiters) != 2) {
-				throw Exception("IllegalDelimiter", -1, "Delimiters must be a string of length 2!")
+				throw Exception("IllegalKeyDelimiters", -1, "Delimiters must be a string of length 2!")
 			}
 			StringSplit, delims, delimiters
 			delimiters := [delims1, delims2]
 		}
 		if (isObject(delimiters)) {
 			if (delimiters.MaxIndex() != 2) {
-				throw Exception("IllegalDelimiter", -1, "Delimiters must be an array of length 2!")
+				throw Exception("IllegalKeyDelimiters", -1, "Delimiters must be an array of length 2!")
 			}
 			if (StrLen(delimiters[1]) != 1) {
-				throw Exception("IllegalDelimiter", -1, "First delimiter must be a single character!")
+				throw Exception("IllegalKeyDelimiters", -1, "First delimiter must be a single character!")
 			}
 			if (StrLen(delimiters[2]) != 1) {
-				throw Exception("IllegalDelimiter", -1, "Second delimiter must be a single character!")
+				throw Exception("IllegalKeyDelimiters", -1, "Second delimiter must be a single character!")
 			}
 			if (delimiters[1] == delimiters[2]) {
-				throw Exception("IllegalDelimiter", -1, "Key begin and key end must not be the same character!")
+				throw Exception("IllegalKeyDelimiters", -1, "Key begin and key end must not be the same character!")
 			}
 			this.keyBegin := delimiters[1]
 			this.keyEnd := delimiters[2]
