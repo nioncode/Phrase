@@ -24,6 +24,8 @@ Create a new Phrase object from a template by using `Phrase.from(template)`.
 <br>
 Then, add values for all keys in the template by calling `put(key, value)` on the phrase object.
 <br>
+To add multiple key-value pairs at once, use `putAll(map)`.
+<br>
 To get the formatted string, call `format()`.
 
 Phrase supports a fluent interface, which makes it possible to chain method calls together:
@@ -52,6 +54,26 @@ will produce
 
 > Hey {my key is inside braces}!
 
+### Custom key delimiters
+You can use custom delimiters to replace the default `{}`.
+<br>
+Pass an array with exactly two elements as `delimiters` to `Phrase.from(template, delimiters)`.
+Each element must be a single character.
+<br>
+Alternatively, pass a string which consists of exactly two characters.
+
+The first entry of the array / first character of the string will be used as key begin, the second one as key end character.
+
+    MsgBox % Phrase.from("Custom delimiters [key]", ["[", "]"]).put("key", "work!").format()
+
+and
+
+    MsgBox % Phrase.from("Custom delimiters [key]", "[]").put("key", "work!").format()
+
+will both produce
+
+> Custom delimiters work!
+
 # Exceptions
 Phrase conforms to the Fail-Fast principle.
 That means as soon as an error is detected, an Exception will be thrown.
@@ -65,6 +87,7 @@ Raised Exceptions:
   - KeyNotSet: When `format()` is called before every key has been assigned a value with `put(key, value)`.
   - EmptyKey: When the template contains an empty key, i.e. `{}` is used.
   - IllegalKeyCharacter: When a key identifier contains an invalid character.
+  - IllegalKeyDelimiters: When the custom delimiters are invalid (string too long, too many entries in array, same begin as end character).
   - UnescapedKeyBegin: When a `{` was not correctly escaped or the end of a key was not found.
 
 # Tests
